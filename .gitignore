@@ -1,0 +1,7 @@
+pkg
+.env
+tmp
+assets
+vendor
+.idea
+.gomvc-db-persisted
