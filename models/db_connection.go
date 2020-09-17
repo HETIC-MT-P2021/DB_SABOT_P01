@@ -5,8 +5,8 @@ import (
 	"fmt"
 	"time"
 
-	// Import handle for postgres
-	_ "github.com/lib/pq"
+	// Dependancy for mysql
+	_ "github.com/go-sql-driver/mysql"
 )
 
 var db *sql.DB
@@ -14,14 +14,14 @@ var db *sql.DB
 // ConnectToDB Set up connection to the postgres DB
 // Will panic on error
 func ConnectToDB(host string, dbname string, user string, password string, port string) {
-	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s "+
-		"password=%s dbname=%s sslmode=disable",
-		host, port, user, password, dbname)
-	tempDB, err := sql.Open("postgres", psqlInfo)
 
-	// Open up our database connection.
-	// set up a database on local machine using phpmyadmin.
-	// The database is called gomvc
+	fmt.Println("Go MySQL ")
+
+	dbParameter := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", user, password, host, port, dbname)
+
+	// Open up our database connection.host
+
+	tempDB, err := sql.Open("mysql", dbParameter)
 
 	if err != nil {
 		fmt.Println("Database connection params error")
@@ -37,7 +37,7 @@ func ConnectToDB(host string, dbname string, user string, password string, port 
 		fmt.Println("Connection to DB did not succeed, new try")
 
 		time.Sleep(5 * time.Second)
-		tempDB, err = sql.Open("postgres", psqlInfo)
+		tempDB, err := sql.Open("mysql", dbParameter)
 		err = tempDB.Ping()
 
 		numberOfTest++

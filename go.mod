@@ -1,4 +1,4 @@
-module packages.hetic.net/gocqrs
+module packages.hetic.net/gosql
 
 go 1.15
 
