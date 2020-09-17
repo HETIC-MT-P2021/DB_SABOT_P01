@@ -4,7 +4,7 @@ import (
 	"net/http"
 
 	"github.com/gin-gonic/gin"
-	"packages.hetic.net/gocqrs/controllers"
+	"packages.hetic.net/gosql/controllers"
 )
 
 func healthCheck(c *gin.Context) {
@@ -20,10 +20,13 @@ func StartRouter(apiPort string) {
 
 	public := router.Group("/")
 	{
-		public.POST("/orders", controllers.CreateOrder)
+		public.GET("/customer/:customerNumber", controllers.GetCustomer)
 
-		public.GET("/orders", controllers.GetOrders)
-		public.GET("/orders/:orderID", controllers.GetOrder)
+		// public.GET("/orders", controllers.GetOrder)
+
+		// public.GET("/employees", controllers.GetEmployees)
+
+		// public.GET("/shops", controllers.GetShops)
 	}
 
 	router.Run(":" + apiPort)

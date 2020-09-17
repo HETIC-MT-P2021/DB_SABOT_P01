@@ -1,4 +1,4 @@
-version: "2"
+version: "3"
 
 services:
   db:
@@ -10,4 +10,6 @@ services:
       MYSQL_ROOT_PASSWORD: "${DB_ROOT_PASSWORD}"
     volumes:
       - ./db:/docker-entrypoint-initdb.d
-      - .gomvc-db-persisted:/var/lib/mysql
+      - .gosql-db-persisted:/var/lib/mysql
+    ports:
+      - "3307:3306"

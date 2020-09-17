@@ -17,8 +17,8 @@ func ConnectToDB(host string, dbname string, user string, password string, port 
 
 	fmt.Println("Go MySQL ")
 
-	dbParameter := fmt.Sprintf("%s:%s@tcp(%s:%d)/%s", user, password, host, port, dbname)
-
+	dbParameter := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, host, port, dbname)
+	fmt.Println(dbParameter)
 	// Open up our database connection.host
 
 	tempDB, err := sql.Open("mysql", dbParameter)
@@ -37,7 +37,7 @@ func ConnectToDB(host string, dbname string, user string, password string, port 
 		fmt.Println("Connection to DB did not succeed, new try")
 
 		time.Sleep(5 * time.Second)
-		tempDB, err := sql.Open("mysql", dbParameter)
+		tempDB, err = sql.Open("mysql", dbParameter)
 		err = tempDB.Ping()
 
 		numberOfTest++
