@@ -13,3 +13,16 @@ services:
       - .gosql-db-persisted:/var/lib/mysql
     ports:
       - "3307:3306"
+
+  app:
+    build: .
+    environment:
+      GIN_MODE: "release"
+    volumes:
+      - .:/app
+    working_dir: /app
+    ports:
+      - "8080:${API_PORT}"
+    command: go run main.go
+    links:
+      - db
