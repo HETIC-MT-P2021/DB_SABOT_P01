@@ -22,11 +22,11 @@ func StartRouter(apiPort string) {
 	{
 		public.GET("/customer/:customerNumber", controllers.GetCustomer)
 
-		// public.GET("/orders", controllers.GetOrder)
+		public.GET("/orders/:orderNumber", controllers.GetOrder)
 
-		// public.GET("/employees", controllers.GetEmployees)
+		public.GET("/employees", controllers.GetEmployees)
 
-		// public.GET("/shops", controllers.GetShops)
+		public.GET("/offices/:officeNumber", controllers.GetOffice)
 	}
 
 	router.Run(":" + apiPort)
