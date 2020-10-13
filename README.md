@@ -28,6 +28,10 @@ $ go mod vendor
 $ air
 ```
 
+### Author
+
+- [Tsabot](https://github.com/Tsabot)
+
 # Licence
 
 The code is available under the MIT license.
