@@ -1,32 +1,55 @@
 package models
 
 import (
-	"fmt"
-
 	"github.com/gin-gonic/gin"
 )
 
+// Customer is the fully detailled stuct for Customer
 type Customer struct {
-	CustomerName     NullString
-	ContactLastName  NullString
-	ContactFirstName NullString
-	PhoneNumber      NullString
-	AddressLine1     NullString
+	CustomerName     string
+	ContactLastName  string
+	ContactFirstName string
+	PhoneNumber      string
+	AddressLine1     string
 	AddressLine2     NullString
-	City             NullString
+	City             string
 	State            NullString
 	PostalCode       NullString
-	Country          NullString
+	Country          string
 	CreditLimit      NullFloat64
 	Orders           []SimplifiedOrder
 	SalesRep         SimplifiedEmployee
 }
 
-// GetCustomer will get all  campaigns from a business
+// GetCustomer will get a customer and it's orders
 func GetCustomer(customerNumber string, c *gin.Context) (Customer, error) {
 	var customer Customer
 	var simplifiedOrders []SimplifiedOrder
-	var orderType Order
+
+	customer, orderNumbers, salesRep, getCustErr := getCustomer(customerNumber, c)
+
+	if getCustErr != nil {
+		return customer, getCustErr
+	}
+
+	orders, getOrderItemErr := getOrdersAndItems(orderNumbers, c)
+
+	if getOrderItemErr != nil {
+		return customer, getOrderItemErr
+	}
+
+	simplifiedOrders = parseSimplifiedOrders(orders)
+
+	customer.Orders = simplifiedOrders
+	customer.SalesRep = salesRep
+
+	return customer, nil
+}
+
+func getCustomer(customerNumber string, c *gin.Context ) (Customer, []int, SimplifiedEmployee, error) {
+	var customer Customer
+	var salesRep SimplifiedEmployee
+	var orderNumbers []int
 
 	customerSQL := `
 	SELECT customerName, C.contactLastName, C.contactFirstName, C.phone, C.addressLine1, C.addressLine2, C.city, C.state, C.postalCode, C.country,
@@ -38,12 +61,10 @@ func GetCustomer(customerNumber string, c *gin.Context) (Customer, error) {
 	rows, err := db.QueryContext(c, customerSQL, customerNumber)
 
 	if err != nil {
-		return customer, err
+		return customer, orderNumbers, salesRep, err
 	}
-
-	var salesRep SimplifiedEmployee
+	
 	var order Order
-	var orderNumbers []int
 
 	isFirstRow := true
 
@@ -51,7 +72,7 @@ func GetCustomer(customerNumber string, c *gin.Context) (Customer, error) {
 		if isFirstRow == true {
 			if err = rows.Scan(&customer.CustomerName, &customer.ContactLastName, &customer.ContactFirstName,
 				&customer.PhoneNumber, &customer.AddressLine1, &customer.AddressLine2, &customer.City, &customer.State, &customer.PostalCode, &customer.Country, &customer.CreditLimit, &salesRep.FirstName, &salesRep.LastName, &salesRep.Email, &order.OrderNumber); err != nil {
-				return customer, err
+				return customer, orderNumbers, salesRep, err
 			}
 			isFirstRow = false
 		} else {
@@ -63,7 +84,7 @@ func GetCustomer(customerNumber string, c *gin.Context) (Customer, error) {
 			}
 
 			if err = rows.Scan(valuePtr...); err != nil {
-				return customer, err
+				return customer, orderNumbers, salesRep, err
 			}
 			order.OrderNumber = int(values[14].(int64))
 		}
@@ -71,62 +92,5 @@ func GetCustomer(customerNumber string, c *gin.Context) (Customer, error) {
 		orderNumbers = append(orderNumbers, order.OrderNumber)
 	}
 
-	// Get information for each customers
-	orderSQL := `SELECT orderNumber, quantityOrdered, priceEach FROM orderdetails WHERE `
-
-	for o := 0; o < len(orderNumbers); o++ {
-		if o != 0 {
-			orderSQL += ` OR `
-		}
-		orderSQL += fmt.Sprintf(`orderNumber=%d`, orderNumbers[o])
-	}
-
-	orderSQL += ` ORDER BY orderNumber DESC`
-
-	orderRows, err := db.QueryContext(c, orderSQL)
-
-	var previousOrderNumber int
-	var orders []Order
-	order = orderType
-
-	for orderRows.Next() {
-		var orderItem OrderItem
-
-		if err = orderRows.Scan(&orderItem.OrderNumber, &orderItem.QuantityOrdered, &orderItem.PriceEach); err != nil {
-			return customer, err
-		}
-		if previousOrderNumber == 0 {
-			previousOrderNumber = orderItem.OrderNumber
-		}
-		if previousOrderNumber != orderItem.OrderNumber {
-			orders = append(orders, order)
-			order = orderType
-			order.OrderNumber = orderItem.OrderNumber
-		}
-
-		order.Items = append(order.Items, orderItem)
-		previousOrderNumber = orderItem.OrderNumber
-	}
-
-	for o := 0; o < len(orders); o++ {
-		var simplifiedOrder SimplifiedOrder
-		var totalValue float64
-
-		for i := 0; i < len(orders[o].Items); i++ {
-			if orders[o].Items[i].PriceEach.Valid == true && orders[o].Items[i].QuantityOrdered.Valid == true {
-				totalValue += orders[o].Items[i].PriceEach.Float64 * float64(orders[o].Items[i].QuantityOrdered.Int32)
-			}
-		}
-
-		simplifiedOrder.OrderNumber = orders[o].OrderNumber
-		simplifiedOrder.NumberOfItems = len(orders[o].Items)
-		simplifiedOrder.TotalValue = totalValue
-
-		simplifiedOrders = append(simplifiedOrders, simplifiedOrder)
-	}
-
-	customer.Orders = simplifiedOrders
-	customer.SalesRep = salesRep
-
-	return customer, nil
+	return customer, orderNumbers, salesRep, nil
 }
