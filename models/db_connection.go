@@ -18,7 +18,6 @@ func ConnectToDB(host string, dbname string, user string, password string, port 
 	fmt.Println("Go MySQL ")
 
 	dbParameter := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s", user, password, host, port, dbname)
-	fmt.Println(dbParameter)
 	// Open up our database connection.host
 
 	tempDB, err := sql.Open("mysql", dbParameter)
